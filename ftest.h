@@ -42,6 +42,7 @@ class Test
 public:
     Test(const char* name, const char* test_case_name) : m_name(name),
             m_status(None), m_test_case_name(test_case_name) {}
+    virtual ~Test() {}
     const std::string& name() const { return m_name; }
     const std::string& case_name() const { return m_test_case_name; }
     TestStatus status() const { return m_status; }
