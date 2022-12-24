@@ -146,7 +146,7 @@ public:
             std::cout << "\n " << failed_count << " FAILED TESTS\n";
         }
 
-        return failed_count;
+        return static_cast<int>(failed_count);
     }
 
     const std::vector<TestCase*>& test_cases() const { return m_test_cases; }
