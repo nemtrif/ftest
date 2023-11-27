@@ -1,5 +1,5 @@
 # FTEST - A Simple and Portable Testing Framework for C++
-I developed FTest to test [UTF-8 CPP library] (https://github.com/nemtrif/utfcpp). Previously, I was using [GoogleTest](https://google.github.io/googletest/) framework. Over time it became increasingly hard to use it with C++ 98. As I was using only a small subset of its features anyway, I decided to write a new testing framework. The important features of the framework are:
+I developed FTest to test [UTF-8 CPP library](https://github.com/nemtrif/utfcpp). Previously, I was using [GoogleTest](https://google.github.io/googletest/) framework. Over time it became increasingly hard to use it with C++ 98. As I was using only a small subset of its features anyway, I decided to write a new testing framework. The important features of the framework are:
 
 - Uses only C++ 98
 - Asserts are similar to a subset of Google Test's ones.
