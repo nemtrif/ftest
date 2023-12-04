@@ -81,3 +81,19 @@ TEST(Negative, expectnotequal)
     EXPECT_NE(1., 2.);
     EXPECT_NE(false, true);
 }
+
+TEST(Strings, expectstrequal)
+{
+    EXPECT_STREQ("abc", "abc");
+    EXPECT_STREQ("", "");
+    EXPECT_STREQ(NULL, NULL);
+}
+
+TEST(Strings, expectstrnotequal)
+{
+    EXPECT_STRNE("abc", "abcd");
+    EXPECT_STRNE(NULL, "abcd");
+    EXPECT_STRNE("abcd", NULL);
+    EXPECT_STRNE("", NULL);
+    EXPECT_STRNE(NULL, "");
+}

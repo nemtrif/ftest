@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <vector>
 #include <iostream>
+#include <cstring>
 
 namespace ftest
 {
@@ -163,6 +164,19 @@ private:
     std::vector<Test*>      m_tests;
 };
 
+inline bool string_eq(const char* a, const char* b)
+{
+    // Two nulls are equal
+    if (!a) return (!b);
+    if (!b) return (!a);
+    return !(std::strcmp(a, b));
+}
+
+inline bool string_neq(const char* a, const char* b)
+{
+    return !(string_eq(a, b));
+}
+
 #ifdef F_TEST_NO_MAIN
 extern TestDriver testdriver;
 #else
@@ -201,12 +215,25 @@ do { \
   } \
 } while (false)
 
+#define FTEST_EXPECT_BOOL_FUNC(a, b, bool_function) \
+do { \
+  if (!(bool_function(a, b))) { \
+    std::cout << __FILE__ << ":" << __LINE__ << ": Failure\n"; \
+    status = ftest::Failed; \
+  } \
+} while (false)
+
+
 #define EXPECT_EQ(a, b) FTEST_EXPECT_PREDICATE(a, b, ==)
 #define EXPECT_NE(a, b) FTEST_EXPECT_PREDICATE(a, b, !=)
 #define EXPECT_LT(a, b) FTEST_EXPECT_PREDICATE(a, b, <)
 #define EXPECT_LE(a, b) FTEST_EXPECT_PREDICATE(a, b, <=)
 #define EXPECT_GT(a, b) FTEST_EXPECT_PREDICATE(a, b, >)
 #define EXPECT_GE(a, b) FTEST_EXPECT_PREDICATE(a, b, >=)
+
+// C-String asserts:
+#define EXPECT_STREQ(a, b) FTEST_EXPECT_BOOL_FUNC(a, b, ftest::string_eq)
+#define EXPECT_STRNE(a, b) FTEST_EXPECT_BOOL_FUNC(a, b, ftest::string_neq)
 
 #define TEST(f_test_case_name, f_test_name) \
 class F_TEST_##f_test_case_name##f_test_name : public ftest::Test \
