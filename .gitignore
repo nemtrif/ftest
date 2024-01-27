@@ -2,3 +2,6 @@
 .vscode/
 # Often used by CMake 
 build/
+# gnu autoconf
+tests/.deps
+tests/.dirstamp
