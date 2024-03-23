@@ -235,6 +235,29 @@ do { \
 #define EXPECT_STREQ(a, b) FTEST_EXPECT_BOOL_FUNC(a, b, ftest::string_eq)
 #define EXPECT_STRNE(a, b) FTEST_EXPECT_BOOL_FUNC(a, b, ftest::string_neq)
 
+// Excepton asserts
+#define EXPECT_THROW(what, exception_type) \
+do { \
+    enum FTEST_EXCEPTION_OUTCOME {FTEST_NONE, FTEST_RIGHT_TYPE, FTEST_WRONG_TYPE}; \
+    FTEST_EXCEPTION_OUTCOME ftest_caught_it = FTEST_NONE; \
+    try { what ; } \
+    catch (exception_type &) { ftest_caught_it = FTEST_RIGHT_TYPE; } \
+    catch (...) { ftest_caught_it = FTEST_WRONG_TYPE; } \
+    if (ftest_caught_it == FTEST_NONE) { \
+        std::cout << __FILE__ << ":" << __LINE__ << ": Failure\n"; \
+        std::cout << "  Expected : " #what " throws an exception of type: " #exception_type \
+        ".\n    Actual: it throws nothing."; \
+        std::cout << std::endl; \
+        status = ftest::Failed; \
+    } else if (ftest_caught_it == FTEST_WRONG_TYPE) { \
+        std::cout << __FILE__ << ":" << __LINE__ << ": Failure\n"; \
+        std::cout << "  Expected : " #what " throws an exception of type: " #exception_type \
+        ".\n    Actual: it throws a different type."; \
+        std::cout << std::endl; \
+        status = ftest::Failed; \
+    } \
+} while (false)
+
 #define TEST(f_test_case_name, f_test_name) \
 class F_TEST_##f_test_case_name##f_test_name : public ftest::Test \
 { \

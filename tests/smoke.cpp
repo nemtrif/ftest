@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "ftest.h"
 #include <iostream>
+#include <stdexcept>
 
 TEST(Simple, simple)
 {
@@ -96,4 +97,9 @@ TEST(Strings, expectstrnotequal)
     EXPECT_STRNE("abcd", NULL);
     EXPECT_STRNE("", NULL);
     EXPECT_STRNE(NULL, "");
+}
+
+TEST(Exceptions, expectthrow)
+{
+    EXPECT_THROW(throw std::runtime_error("something"), std::runtime_error);
 }
