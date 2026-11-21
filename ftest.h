@@ -177,6 +177,156 @@ inline bool string_neq(const char* a, const char* b)
     return !(string_eq(a, b));
 }
 
+inline void print_value(std::ostream& stream, bool value)
+{
+    stream << (value ? "true" : "false");
+}
+
+inline void print_value(std::ostream& stream, char value)
+{
+    stream << "'" << value << "'";
+}
+
+inline void print_value(std::ostream& stream, signed char value)
+{
+    stream << static_cast<int>(value);
+}
+
+inline void print_value(std::ostream& stream, unsigned char value)
+{
+    stream << static_cast<unsigned int>(value);
+}
+
+inline void print_value(std::ostream& stream, short value) { stream << value; }
+inline void print_value(std::ostream& stream, unsigned short value) { stream << value; }
+inline void print_value(std::ostream& stream, int value) { stream << value; }
+inline void print_value(std::ostream& stream, unsigned int value) { stream << value; }
+inline void print_value(std::ostream& stream, long value) { stream << value; }
+inline void print_value(std::ostream& stream, unsigned long value) { stream << value; }
+inline void print_value(std::ostream& stream, float value) { stream << value; }
+inline void print_value(std::ostream& stream, double value) { stream << value; }
+inline void print_value(std::ostream& stream, long double value) { stream << value; }
+
+inline void print_value(std::ostream& stream, const char* value)
+{
+    if (value)
+        stream << "\"" << value << "\"";
+    else
+        stream << "NULL";
+}
+
+inline void print_value(std::ostream& stream, char* value)
+{
+    print_value(stream, static_cast<const char*>(value));
+}
+
+inline void print_value(std::ostream& stream, const std::string& value)
+{
+    stream << "\"" << value << "\"";
+}
+
+template <size_t size>
+inline void print_value(std::ostream& stream, const char (&value)[size])
+{
+    stream << "\"" << value << "\"";
+}
+
+template <typename T>
+inline void print_value(std::ostream& stream, const T& /*value*/)
+{
+    stream << "<value unavailable>";
+}
+
+inline void expect_bool(const char* file, int line, const char* expression,
+                        bool expected, bool actual, TestStatus& status)
+{
+    if (actual != expected) {
+        std::cout << file << ":" << line << ": Failure\n";
+        std::cout << "  Expected: " << expression << " is "
+                  << (expected ? "true" : "false") << "\n";
+        std::cout << "    Actual: " << (actual ? "true" : "false")
+                  << std::endl;
+        status = Failed;
+    }
+}
+
+template <typename Predicate, typename A, typename B>
+inline void expect_predicate(const char* file, int line,
+                             const char* expression_a,
+                             const char* expression_b,
+                             const char* operator_name,
+                             const A& a, const B& b, Predicate predicate,
+                             TestStatus& status)
+{
+    if (!predicate(a, b)) {
+        std::cout << file << ":" << line << ": Failure\n";
+        std::cout << "  Expected: " << expression_a << " " << operator_name
+                  << " " << expression_b << "\n";
+        std::cout << "    Actual: ";
+        print_value(std::cout, a);
+        std::cout << " " << operator_name << " ";
+        print_value(std::cout, b);
+        std::cout << std::endl;
+        status = Failed;
+    }
+}
+
+struct predicate_equal
+{
+    template <typename A, typename B>
+    bool operator()(const A& a, const B& b) const { return a == b; }
+};
+
+struct predicate_not_equal
+{
+    template <typename A, typename B>
+    bool operator()(const A& a, const B& b) const { return a != b; }
+};
+
+struct predicate_less
+{
+    template <typename A, typename B>
+    bool operator()(const A& a, const B& b) const { return a < b; }
+};
+
+struct predicate_less_equal
+{
+    template <typename A, typename B>
+    bool operator()(const A& a, const B& b) const { return a <= b; }
+};
+
+struct predicate_greater
+{
+    template <typename A, typename B>
+    bool operator()(const A& a, const B& b) const { return a > b; }
+};
+
+struct predicate_greater_equal
+{
+    template <typename A, typename B>
+    bool operator()(const A& a, const B& b) const { return a >= b; }
+};
+
+inline void expect_string(const char* file, int line,
+                          const char* expression_a,
+                          const char* expression_b,
+                          const char* operator_name,
+                          const char* a, const char* b, bool equal,
+                          TestStatus& status)
+{
+    if ((string_eq(a, b) != equal)) {
+        std::cout << file << ":" << line << ": Failure\n";
+        std::cout << "  Expected: " << expression_a << " " << operator_name
+                  << " " << expression_b << "\n";
+        std::cout << "    Actual: ";
+        print_value(std::cout, a);
+        std::cout << " " << operator_name << " ";
+        print_value(std::cout, b);
+        std::cout << std::endl;
+        status = Failed;
+    }
+}
+
 #ifdef F_TEST_NO_MAIN
 extern TestDriver testdriver;
 #else
@@ -187,53 +337,39 @@ TestDriver testdriver;
 
 #define EXPECT_TRUE(what) \
 do { \
-  if (!(what)) {\
-    std::cout << __FILE__ << ":" << __LINE__ << ": Failure\n"; \
-    std::cout << "  Expected : true\n    Actual : "; \
-    std::cout << (what ? "true" : "false"); \
-    std::cout << std::endl; \
-    status = ftest::Failed; \
-  } \
+  const bool ftest_actual = !!(what); \
+  ftest::expect_bool(__FILE__, __LINE__, #what, true, ftest_actual, status); \
 } while (false)
 
 #define EXPECT_FALSE(what) \
 do { \
-  if (what) {\
-    std::cout << __FILE__ << ":" << __LINE__ << ": Failure\n"; \
-    std::cout << "  Expected : false\n    Actual : "; \
-    std::cout << (what ? "true" : "false"); \
-    std::cout << std::endl; \
-    status = ftest::Failed; \
-  } \
+  const bool ftest_actual = !!(what); \
+  ftest::expect_bool(__FILE__, __LINE__, #what, false, ftest_actual, status); \
 } while (false)
 
-#define FTEST_EXPECT_PREDICATE(a, b, predicate_operator) \
+#define FTEST_EXPECT_PREDICATE(a, b, predicate_operator, predicate_type) \
 do { \
-  if (!(a predicate_operator b)) { \
-    std::cout << __FILE__ << ":" << __LINE__ << ": Failure\n"; \
-    status = ftest::Failed; \
-  } \
+  ftest::expect_predicate(__FILE__, __LINE__, #a, #b, #predicate_operator, \
+                          a, b, ftest::predicate_type(), status); \
 } while (false)
 
-#define FTEST_EXPECT_BOOL_FUNC(a, b, bool_function) \
-do { \
-  if (!(bool_function(a, b))) { \
-    std::cout << __FILE__ << ":" << __LINE__ << ": Failure\n"; \
-    status = ftest::Failed; \
-  } \
-} while (false)
-
-
-#define EXPECT_EQ(a, b) FTEST_EXPECT_PREDICATE(a, b, ==)
-#define EXPECT_NE(a, b) FTEST_EXPECT_PREDICATE(a, b, !=)
-#define EXPECT_LT(a, b) FTEST_EXPECT_PREDICATE(a, b, <)
-#define EXPECT_LE(a, b) FTEST_EXPECT_PREDICATE(a, b, <=)
-#define EXPECT_GT(a, b) FTEST_EXPECT_PREDICATE(a, b, >)
-#define EXPECT_GE(a, b) FTEST_EXPECT_PREDICATE(a, b, >=)
+#define EXPECT_EQ(a, b) FTEST_EXPECT_PREDICATE(a, b, ==, predicate_equal)
+#define EXPECT_NE(a, b) FTEST_EXPECT_PREDICATE(a, b, !=, predicate_not_equal)
+#define EXPECT_LT(a, b) FTEST_EXPECT_PREDICATE(a, b, <, predicate_less)
+#define EXPECT_LE(a, b) FTEST_EXPECT_PREDICATE(a, b, <=, predicate_less_equal)
+#define EXPECT_GT(a, b) FTEST_EXPECT_PREDICATE(a, b, >, predicate_greater)
+#define EXPECT_GE(a, b) FTEST_EXPECT_PREDICATE(a, b, >=, predicate_greater_equal)
 
 // C-String asserts:
-#define EXPECT_STREQ(a, b) FTEST_EXPECT_BOOL_FUNC(a, b, ftest::string_eq)
-#define EXPECT_STRNE(a, b) FTEST_EXPECT_BOOL_FUNC(a, b, ftest::string_neq)
+#define EXPECT_STREQ(a, b) \
+do { \
+  ftest::expect_string(__FILE__, __LINE__, #a, #b, "==", a, b, true, status); \
+} while (false)
+
+#define EXPECT_STRNE(a, b) \
+do { \
+  ftest::expect_string(__FILE__, __LINE__, #a, #b, "!=", a, b, false, status); \
+} while (false)
 
 // Excepton asserts
 #define EXPECT_THROW(what, exception_type) \

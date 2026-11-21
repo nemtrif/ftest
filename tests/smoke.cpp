@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "ftest.h"
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 TEST(Simple, simple)
@@ -102,4 +103,20 @@ TEST(Strings, expectstrnotequal)
 TEST(Exceptions, expectthrow)
 {
     EXPECT_THROW(throw std::runtime_error("something"), std::runtime_error);
+}
+
+TEST(Diagnostics, predicate_failure)
+{
+    std::ostringstream output;
+    std::streambuf* original = std::cout.rdbuf(output.rdbuf());
+    ftest::TestStatus diagnostic_status = ftest::None;
+
+    ftest::expect_predicate(__FILE__, __LINE__, "left", "right", "==",
+                            1, 2, ftest::predicate_equal(), diagnostic_status);
+
+    std::cout.rdbuf(original);
+    EXPECT_EQ(diagnostic_status, ftest::Failed);
+    EXPECT_NE(output.str().find("Expected: left == right"),
+              std::string::npos);
+    EXPECT_NE(output.str().find("Actual: 1 == 2"), std::string::npos);
 }
